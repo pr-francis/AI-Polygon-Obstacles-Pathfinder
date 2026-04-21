@@ -13,7 +13,9 @@
 
 namespace App {
     static ImVector<ImVec2> points;
+    static std::vector<ImVector<ImVec2>> shapes;
     ImDrawList* draw_list;
+    bool created_shape = false;
     void RenderUI(){
         ImGui::Begin("UI");
         {
@@ -40,9 +42,8 @@ namespace App {
         ImGui::RadioButton("Dijkstra", &algorithm, 1);
         ImGui::RadioButton("BFS", &algorithm, 2);
 
-        if(ImGui::Button("Create Shape From Points") && points.size() > 3) {
-            draw_list->AddConvexPolyFilled(points.Data, points.size(), IM_COL32(255, 255, 255, 255));
-            //points.clear();
+        if(ImGui::Button("Create Shape From Points") && points.size() > 2) {
+            created_shape = true;
         }
     }
 
@@ -57,7 +58,6 @@ namespace App {
         // Draw the canvas background and border
         ImGuiIO& io = ImGui::GetIO();
         draw_list = ImGui::GetWindowDrawList();
-        std::cout << draw_list->IdxBuffer.size() << '\n';
         draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
         draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
 
@@ -66,7 +66,7 @@ namespace App {
         const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
         // Adding points
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered()){
             points.push_back(mouse_pos_in_canvas);
         }
 
@@ -79,6 +79,15 @@ namespace App {
 
         for(const auto& point : points){
             draw_list->AddCircleFilled(ImVec2(origin.x + point.x, origin.y + point.y), 2.0f, IM_COL32(255, 255, 255, 255));
+        }
+        for(const auto& shape : shapes){
+            //@FIXME: Polygons are slightly shifted from the points position upon creation
+            draw_list->AddConvexPolyFilled(shape.Data, shape.size(), IM_COL32(255, 255, 255, 255));
+        }
+        if(created_shape){
+            shapes.push_back(points);
+            points.clear();
+            created_shape = false;
         }
         draw_list->PopClipRect();
     }
