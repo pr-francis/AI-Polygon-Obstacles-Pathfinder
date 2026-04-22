@@ -10,10 +10,13 @@
 #include <vector>
 
 #include <imgui.h>
+#include <Vertex.h>
+#include <Polygon.h>
 
 namespace App {
-    static ImVector<ImVec2> points;
-    static std::vector<ImVector<ImVec2>> shapes;
+    static std::vector<Vertex> points_to_draw;
+    static std::vector<Vertex> points;
+    static std::vector<Polygon> polys;
     ImDrawList* draw_list;
     bool created_shape = false;
     void RenderUI(){
@@ -42,7 +45,7 @@ namespace App {
         ImGui::RadioButton("Dijkstra", &algorithm, 1);
         ImGui::RadioButton("BFS", &algorithm, 2);
 
-        if(ImGui::Button("Create Shape From Points") && points.size() > 2) {
+        if(ImGui::Button("Create Shape From Points") && points_to_draw.size() > 2) {
             created_shape = true;
         }
     }
@@ -67,7 +70,9 @@ namespace App {
 
         // Adding points
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered()){
-            points.push_back(mouse_pos_in_canvas);
+            Vertex point(mouse_pos_in_canvas, 0.0f);
+            points_to_draw.push_back(point);
+            points.push_back(point);
         }
 
         // Draw the grid lines, shapes & points
@@ -77,16 +82,22 @@ namespace App {
         for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
             draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
 
-        for(const auto& point : points){
-            draw_list->AddCircleFilled(ImVec2(origin.x + point.x, origin.y + point.y), 2.0f, IM_COL32(255, 255, 255, 255));
+        for(const auto& point : points_to_draw){
+            draw_list->AddCircleFilled(ImVec2(origin.x + point.pos.x, origin.y + point.pos.y), 2.0f, IM_COL32(255, 255, 255, 255));
         }
-        for(const auto& shape : shapes){
+        for(const auto& poly : polys){
             //@FIXME: Polygons are slightly shifted from the points position upon creation
-            draw_list->AddConvexPolyFilled(shape.Data, shape.size(), IM_COL32(255, 255, 255, 255));
+            std::vector<ImVec2> pts;
+            pts.reserve(poly.vertices.size());
+
+            for (const auto& v : poly.vertices)
+                pts.push_back(ImVec2(origin.x + v.pos.x, origin.y + v.pos.y));
+            draw_list->AddConvexPolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
         }
         if(created_shape){
-            shapes.push_back(points);
-            points.clear();
+            Polygon poly(points_to_draw);
+            polys.push_back(poly);
+            points_to_draw.clear();
             created_shape = false;
         }
         draw_list->PopClipRect();
