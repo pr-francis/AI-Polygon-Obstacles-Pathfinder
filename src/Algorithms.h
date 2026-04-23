@@ -6,11 +6,8 @@
 #define SRC_ALGORITHMS_H
 
 
-
 class Algorithms {
-
 };
-
 
 
 #endif //SRC_ALGORITHMS_H
