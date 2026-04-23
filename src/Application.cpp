@@ -16,9 +16,14 @@
 namespace App {
     static std::vector<Vertex> points_to_draw;
     static std::vector<Vertex> points;
+    static Vertex start_node = Vertex{};
+    static Vertex goal_node = Vertex{};
     static std::vector<Polygon> polys;
     ImDrawList* draw_list;
     bool created_shape = false;
+    bool placing_start_node = false;
+    bool placing_goal_node = false;
+
     void RenderUI(){
         ImGui::Begin("UI");
         {
@@ -48,6 +53,18 @@ namespace App {
         if(ImGui::Button("Create Shape From Points") && points_to_draw.size() > 2) {
             created_shape = true;
         }
+
+        if(ImGui::Button("Place start node")){
+            placing_goal_node = false;
+            placing_start_node = true;
+            points_to_draw.clear();
+        }
+
+        if(ImGui::Button("Place goal node")){
+            placing_goal_node = true;
+            placing_start_node = false;
+            points_to_draw.clear();
+        }
     }
 
     void RenderGrid() {
@@ -69,10 +86,22 @@ namespace App {
         const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
         // Adding points
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered()){
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !placing_start_node && !placing_goal_node){
             Vertex point(mouse_pos_in_canvas, 0.0f);
             points_to_draw.push_back(point);
             points.push_back(point);
+        }
+
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node){
+            Vertex point(mouse_pos_in_canvas, 0.0f);
+            start_node = point;
+            placing_start_node = false;
+        }
+
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_goal_node){
+            Vertex point(mouse_pos_in_canvas, 0.0f);
+            goal_node = point;
+            placing_goal_node = false;
         }
 
         // Draw the grid lines, shapes & points
@@ -84,6 +113,12 @@ namespace App {
 
         for(const auto& point : points_to_draw){
             draw_list->AddCircleFilled(ImVec2(origin.x + point.pos.x, origin.y + point.pos.y), 2.0f, IM_COL32(255, 255, 255, 255));
+        }
+        if(!goal_node.unassigned){
+            draw_list->AddCircleFilled(ImVec2(origin.x + goal_node.pos.x, origin.y + goal_node.pos.y), 4.0f, IM_COL32(255, 0, 0, 255));
+        }
+        if(!start_node.unassigned){
+            draw_list->AddCircleFilled(ImVec2(origin.x + start_node.pos.x, origin.y + start_node.pos.y), 4.0f, IM_COL32(0, 255, 0, 255));
         }
         for(const auto& poly : polys){
             //@FIXME: Polygons are slightly shifted from the points position upon creation
