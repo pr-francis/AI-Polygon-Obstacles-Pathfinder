@@ -20,6 +20,7 @@ namespace App {
     static Vertex goal_node = Vertex{};
     static std::vector<Polygon> polys;
     static uint8_t next_idx = 0;
+    static uint8_t next_polygon_idx = 0;
     ImDrawList* draw_list;
     bool created_shape = false;
     bool placing_start_node = false;
@@ -38,7 +39,7 @@ namespace App {
             RenderSidebar();
             ImGui::EndChild();
         }
-        std::cout << (int)next_idx << std::endl;
+        std::cout << (int)next_idx << " " << (int)next_polygon_idx << std::endl;
         //ImGui::ShowDemoWindow();
 
         ImGui::End();
@@ -88,20 +89,21 @@ namespace App {
 
         // Adding points
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !placing_start_node && !placing_goal_node){
-            Vertex point(next_idx, mouse_pos_in_canvas, 0.0f);
+            Vertex point(next_idx, next_polygon_idx, mouse_pos_in_canvas, 0.0f);
             points_to_draw.push_back(point);
             points.push_back(point);
             next_idx++;
+            next_polygon_idx++;
         }
 
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node){
-            Vertex point(next_idx, mouse_pos_in_canvas, 0.0f);
+            Vertex point(mouse_pos_in_canvas, 0.0f);
             start_node = point;
             placing_start_node = false;
         }
 
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_goal_node){
-            Vertex point(next_idx, mouse_pos_in_canvas, 0.0f);
+            Vertex point(mouse_pos_in_canvas, 0.0f);
             goal_node = point;
             placing_goal_node = false;
         }
