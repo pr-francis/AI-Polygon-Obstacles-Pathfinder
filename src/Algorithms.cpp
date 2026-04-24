@@ -23,7 +23,7 @@ float euclideanDistance(int idx1, int idx2) {
 
         // used std::hypot to calculate the euclidean dist
         float dist = std::hypot(pos1.first - pos2.first,pos1.second - pos2.second);
-        return dist
+        return dist;
     }
     else {
         std::cout<<idx1<<" and "<<idx2<< " are not neighbors!"<<std::endl;
@@ -39,16 +39,4 @@ bool checkNeighbor(int idx1, int idx2) { // check if two Vertices are connected 
         }
     }
     return false;
-}
-
-int main(){
-vertices.push_back(Vertex((1,2),10)); // 0: start node
-vertices.push_back(Vertex((2.5,3.5),7)); // 1
-vertices.push_back(Vertex((4.5,3.5),4.3)); // 2
-vertices.push_back(Vertex((4.5,0.5),3.2)); // 3
-vertices.push_back(Vertex((2.5,0.5),8.3)); // 4
-vertices.push_back(Vertex((5.5,2),0)); // 5
-
-
-return 0;
 }
