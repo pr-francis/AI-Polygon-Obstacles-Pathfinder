@@ -8,6 +8,7 @@ struct Vertex {
     uint8_t polygonIdx{};
     ImVec2 pos;
     float heuristic;
+    float cost;
     bool unassigned = false;
 
     Vertex() : idx(0), pos(ImVec2(0.0f, 0.0f)), heuristic(0.0f), unassigned(true) {}
