@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include <queue>
 #include "VisibilityGraph.h"
+#include <utility>
 #include <vector>
 #include <map>
 #include <iostream>
@@ -14,11 +15,14 @@
 
 class Algorithms{
 private:
+	std::map<int, std::vector<int>> adjacencyList;
 	std::vector<Vertex> vertices;
 public:
 	float euclideanDistance(int idx1, int idx2);
 	bool checkNeighbor(int idx1, int idx2);
-	std::vector<int> bfs(std::map<int, std::vector<int>> adjacency_list, int start, int end);
+	std::vector<int> bfs(int start, int end);
+
+	Algorithms(std::map<int, std::vector<int>> adjacencyList, const std::vector<Vertex>& vertices) : adjacencyList(std::move(adjacencyList)), vertices(vertices) {};
 };
 
 

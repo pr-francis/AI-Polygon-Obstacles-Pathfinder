@@ -1,22 +1,28 @@
 #include "Algorithms.h"
+#include "VisibilityGraph.h"
+
+#include <vector>
+#include <map>
+#include <queue>
+#include <unordered_set>
 
 // lookupTable = map<idx, <vector<pair<idx,cost>>>
-std::map<int, std::vector<std::pair<int, float>>> lookupTable= { // 0 is the start index, 5 is the goal index
-    {0, { {1, euclideanDistance(0,1)},{4, euclideanDistance(0,4)} }},
-    {1, { {0, euclideanDistance(1,0)},{2, euclideanDistance(1,2)},{4, euclideanDistance(1,4)} }},
-    {2, { {1, euclideanDistance(2,1)},{3, euclideanDistance(2,3)},{5, euclideanDistance(2,5)} }},
-    {3, { {2, euclideanDistance(3,2)},{4, euclideanDistance(3,4)},{5, euclideanDistance(3,5)} }},
-    {4, { {0, euclideanDistance(4,0)},{1, euclideanDistance(4,1)},{3, euclideanDistance(4,3)} }},
-    {5, { {2, euclideanDistance(5,2)},{3, euclideanDistance(5,3)} }}
-};
+// std::map<int, std::vector<std::pair<int, float>>> lookupTable= { // 0 is the start index, 5 is the goal index
+//     {0, { {1, euclideanDistance(0,1)},{4, euclideanDistance(0,4)} }},
+//     {1, { {0, euclideanDistance(1,0)},{2, euclideanDistance(1,2)},{4, euclideanDistance(1,4)} }},
+//     {2, { {1, euclideanDistance(2,1)},{3, euclideanDistance(2,3)},{5, euclideanDistance(2,5)} }},
+//     {3, { {2, euclideanDistance(3,2)},{4, euclideanDistance(3,4)},{5, euclideanDistance(3,5)} }},
+//     {4, { {0, euclideanDistance(4,0)},{1, euclideanDistance(4,1)},{3, euclideanDistance(4,3)} }},
+//     {5, { {2, euclideanDistance(5,2)},{3, euclideanDistance(5,3)} }}
+// };
 
-float euclideanDistance(int idx1, int idx2) {
+float Algorithms::euclideanDistance(int idx1, int idx2) {
     if (checkNeighbor(idx1,idx2)) {
-        std::pair<float,float> pos1 = vertices[idx1].pos;
-        std::pair<float,float> pos2 = vertices[idx2].pos;
+        ImVec2 pos1 = vertices[idx1].pos;
+        ImVec2 pos2 = vertices[idx2].pos;
 
         // used std::hypot to calculate the euclidean dist
-        float dist = std::hypot(pos1.first - pos2.first,pos1.second - pos2.second);
+        float dist = std::hypot(pos1.x - pos2.x, pos1.y - pos2.y);
         return dist;
     }
     else {
@@ -24,17 +30,17 @@ float euclideanDistance(int idx1, int idx2) {
     }
 }
 
-bool checkNeighbor(int idx1, int idx2) { // check if two Vertices are connected in the lookup table
-    std::vector<std::pair<int,float>> idx1Neighbours = lookupTable[idx1]; // this would return a vector from the lookupTable
-    for (std::pair<int,float> p : idx1Neighbours) { // iterate over the vector pairs to check if the 2 indices are neighbors
-        if (p.first==idx2) {
+bool Algorithms::checkNeighbor(int idx1, int idx2) { // check if two Vertices are connected in the lookup table
+    const auto& idx1Neighbours = adjacencyList[idx1]; // this would return a vector from the lookupTable
+    for (int p : idx1Neighbours) { // iterate over the vector pairs to check if the 2 indices are neighbors
+        if (p==idx2) {
             return true;
         }
     }
     return false;
 }
 
-std::vector<int> bfs(std::map<int, std::vector<int>> adjacencyList, int start, int end) {
+std::vector<int> Algorithms::bfs(int start, int end) {
 	if (start == end || end>adjacencyList.size()) {return {};}
 
 	std::queue<int> frontier;

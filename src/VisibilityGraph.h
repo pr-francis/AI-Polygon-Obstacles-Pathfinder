@@ -14,5 +14,5 @@ private:
     bool is_intersecting(ImVec2 A, ImVec2 B, ImVec2 C, ImVec2 D);
 public:
     VisibilityGraph() = default;
-    std::map<int, std::vector<int>> build_graph(std::vector<Polygon> polygons, Vertex start, Vertex goal);
+    std::map<int, std::vector<int>> build_graph(const std::vector<Polygon>& polygons, Vertex start, Vertex goal);
 };

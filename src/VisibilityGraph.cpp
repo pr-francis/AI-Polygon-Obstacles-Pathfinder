@@ -26,7 +26,7 @@ bool VisibilityGraph::is_intersecting(ImVec2 A, ImVec2 B, ImVec2 C, ImVec2 D){
     return false;
 }
 
-std::map<int, std::vector<int>> VisibilityGraph::build_graph(std::vector<Polygon> polygons, Vertex start, Vertex goal){
+std::map<int, std::vector<int>> VisibilityGraph::build_graph(const std::vector<Polygon>& polygons, Vertex start, Vertex goal){
     adjacency_list.clear();
     all_nodes.clear();
     walls.clear();

@@ -1,21 +1,23 @@
 #include "Application.h"
 
-#include <math.h>
-#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <cstdint>
-#include <optional>
-#include <stdexcept>
-#include <thread>
 #include <vector>
 
 #include <imgui.h>
 #include <Vertex.h>
 #include <Polygon.h>
 
+#include "Algorithms.h"
+#include "VisibilityGraph.h"
+
 namespace App {
     static std::vector<Vertex> points_to_draw;
     static std::vector<Vertex> points;
+    static std::vector<Vertex> path_points;
+    static VisibilityGraph visibility_graph;
+
     static Vertex start_node = Vertex{};
     static Vertex goal_node = Vertex{};
     static std::vector<Polygon> polys;
@@ -39,7 +41,7 @@ namespace App {
             RenderSidebar();
             ImGui::EndChild();
         }
-        std::cout << (int)next_idx << " " << (int)next_polygon_idx << std::endl;
+
         //ImGui::ShowDemoWindow();
 
         ImGui::End();
@@ -48,9 +50,9 @@ namespace App {
     void RenderSidebar() {
         ImGui::Text("Algorithm:");
         static int algorithm = 0;
-        ImGui::RadioButton("A*", &algorithm, 0);
+        ImGui::RadioButton("BFS", &algorithm, 0);
         ImGui::RadioButton("Dijkstra", &algorithm, 1);
-        ImGui::RadioButton("BFS", &algorithm, 2);
+        ImGui::RadioButton("A*", &algorithm, 2);
 
         if(ImGui::Button("Create Shape From Points") && points_to_draw.size() > 2) {
             created_shape = true;
@@ -66,6 +68,32 @@ namespace App {
             placing_goal_node = true;
             placing_start_node = false;
             //points_to_draw.clear();
+        }
+
+        if (ImGui::Button("Generate path")) {
+            const auto adjacency_list = visibility_graph.build_graph(polys, start_node, goal_node);
+            Algorithms algorithms(adjacency_list, points);
+            std::vector<int> path;
+
+            start_node.idx = 0;
+            goal_node.idx = points.size();
+            switch (algorithm){
+                case 0:
+                    //bfs
+                    path = algorithms.bfs(start_node.idx, goal_node.idx);
+                    break;
+                case 1:
+                    //A*
+                    break;
+                case 2:
+                    //Dijkstra
+                    break;
+                default:
+                    break;
+            }
+            for (const int &idx : path) {
+                path_points.push_back(points[idx]);
+            }
         }
     }
 
@@ -93,7 +121,6 @@ namespace App {
             points_to_draw.push_back(point);
             points.push_back(point);
             next_idx++;
-            next_polygon_idx++;
         }
 
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node){
@@ -114,7 +141,14 @@ namespace App {
             draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
         for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
             draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
-
+        if (!path_points.empty()) {
+            for (int i = 0; i < path_points.size() - 1; i++) {
+                draw_list->AddLine(
+                    ImVec2(path_points[i].pos.x, path_points[i].pos.y),
+                    ImVec2(path_points[i + 1].pos.x, path_points[i + 1].pos.y),
+                        IM_COL32(255, 0, 0, 255));
+            }
+        }
         for(const auto& point : points_to_draw){
             draw_list->AddCircleFilled(ImVec2(origin.x + point.pos.x, origin.y + point.pos.y), 2.0f, IM_COL32(255, 255, 255, 255));
         }
@@ -125,18 +159,18 @@ namespace App {
             draw_list->AddCircleFilled(ImVec2(origin.x + start_node.pos.x, origin.y + start_node.pos.y), 4.0f, IM_COL32(0, 255, 0, 255));
         }
         for(const auto& poly : polys){
-            //@FIXME: Polygons are slightly shifted from the points position upon creation
             std::vector<ImVec2> pts;
             pts.reserve(poly.vertices.size());
 
             for (const auto& v : poly.vertices)
-                pts.push_back(ImVec2(origin.x + v.pos.x, origin.y + v.pos.y));
-            draw_list->AddConvexPolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
+                pts.emplace_back(origin.x + v.pos.x, origin.y + v.pos.y);
+            draw_list->AddConcavePolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
         }
         if(created_shape){
             Polygon poly(points_to_draw);
             polys.push_back(poly);
             points_to_draw.clear();
+            next_polygon_idx++;
             created_shape = false;
         }
         draw_list->PopClipRect();
