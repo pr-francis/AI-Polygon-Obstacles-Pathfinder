@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <algorithm>
 
 #include <imgui.h>
 #include <Vertex.h>
@@ -66,21 +67,10 @@ namespace App {
             //points_to_draw.clear();
         }
 
-        if(ImGui::Button("Place goal node")){
+        if(ImGui::Button("Place goal node")) {
             placing_goal_node = true;
             placing_start_node = false;
             //points_to_draw.clear();
-        }
-
-        if (ImGui::Button("Clear all")){
-            points_to_draw.clear();
-            points.clear();
-            path_points.clear();
-            polys.clear();
-            next_idx = 0;
-            next_polygon_idx = 0;
-            start_node_placed = false;
-            goal_node_placed = false;
         }
 
         if (ImGui::Button("Generate path")) {
@@ -114,6 +104,17 @@ namespace App {
             for (const int &idx : path) {
                 path_points.push_back(all_vertices[idx]);
             }
+        }
+
+        if (ImGui::Button("Clear all")){
+            points_to_draw.clear();
+            points.clear();
+            path_points.clear();
+            polys.clear();
+            next_idx = 0;
+            next_polygon_idx = 0;
+            start_node_placed = false;
+            goal_node_placed = false;
         }
     }
 
@@ -179,7 +180,7 @@ namespace App {
 
             for (const auto& v : poly.vertices)
                 pts.emplace_back(origin.x + v.pos.x, origin.y + v.pos.y);
-            draw_list->AddConcavePolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
+            draw_list->AddConvexPolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
         }
         if (!path_points.empty()) {
             for (int i = 0; i < path_points.size() - 1; i++) {
@@ -190,6 +191,22 @@ namespace App {
             }
         }
         if(created_shape){
+            // Calculate centroid
+            ImVec2 centroid(0.0f, 0.0f);
+            for (const auto& p : points_to_draw) {
+                centroid.x += p.pos.x;
+                centroid.y += p.pos.y;
+            }
+            centroid.x /= static_cast<float>(points_to_draw.size());
+            centroid.y /= static_cast<float>(points_to_draw.size());
+
+            // Sort vertices clockwise around centroid
+            std::sort(points_to_draw.begin(), points_to_draw.end(), [&centroid](const Vertex& a, const Vertex& b) {
+                float angleA = atan2f(a.pos.y - centroid.y, a.pos.x - centroid.x);
+                float angleB = atan2f(b.pos.y - centroid.y, b.pos.x - centroid.x);
+                return angleA < angleB;
+            });
+
             Polygon poly(points_to_draw);
             polys.push_back(poly);
             points_to_draw.clear();
