@@ -189,6 +189,7 @@ std::vector<int> Algorithms::dijkstra(int start, int end) {
 				if (nodeGCost < gCost[p]) {
 					frontier.emplace(nodeGCost,p);
 					parentMap[p] = firstElement;
+					gCost[p] = nodeGCost;
 				}
 			}
 		}
