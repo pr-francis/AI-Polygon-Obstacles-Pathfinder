@@ -27,6 +27,8 @@ namespace App {
     bool created_shape = false;
     bool placing_start_node = false;
     bool placing_goal_node = false;
+    bool start_node_placed = false;
+    bool goal_node_placed = false;
 
     void RenderUI(){
         ImGui::Begin("UI");
@@ -71,12 +73,16 @@ namespace App {
         }
 
         if (ImGui::Button("Generate path")) {
+            std::vector<Vertex> all_vertices = points;
+            start_node.idx = all_vertices.size();
+            all_vertices.push_back(start_node);
+            goal_node.idx = all_vertices.size();
+            all_vertices.push_back(goal_node);
+
             const auto adjacency_list = visibility_graph.build_graph(polys, start_node, goal_node);
-            Algorithms algorithms(adjacency_list, points);
+            Algorithms algorithms(adjacency_list, all_vertices);
             std::vector<int> path;
 
-            start_node.idx = 0;
-            goal_node.idx = points.size();
             switch (algorithm){
                 case 0:
                     //bfs
@@ -91,8 +97,9 @@ namespace App {
                 default:
                     break;
             }
+            path_points.clear();
             for (const int &idx : path) {
-                path_points.push_back(points[idx]);
+                path_points.push_back(all_vertices[idx]);
             }
         }
     }
@@ -126,12 +133,14 @@ namespace App {
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node){
             Vertex point(mouse_pos_in_canvas, 0.0f);
             start_node = point;
+            start_node_placed = true;
             placing_start_node = false;
         }
 
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_goal_node){
             Vertex point(mouse_pos_in_canvas, 0.0f);
             goal_node = point;
+            goal_node_placed = true;
             placing_goal_node = false;
         }
 
@@ -141,21 +150,14 @@ namespace App {
             draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
         for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
             draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
-        if (!path_points.empty()) {
-            for (int i = 0; i < path_points.size() - 1; i++) {
-                draw_list->AddLine(
-                    ImVec2(path_points[i].pos.x, path_points[i].pos.y),
-                    ImVec2(path_points[i + 1].pos.x, path_points[i + 1].pos.y),
-                        IM_COL32(255, 0, 0, 255));
-            }
-        }
+
         for(const auto& point : points_to_draw){
             draw_list->AddCircleFilled(ImVec2(origin.x + point.pos.x, origin.y + point.pos.y), 2.0f, IM_COL32(255, 255, 255, 255));
         }
-        if(!goal_node.unassigned){
+        if(goal_node_placed){
             draw_list->AddCircleFilled(ImVec2(origin.x + goal_node.pos.x, origin.y + goal_node.pos.y), 4.0f, IM_COL32(255, 0, 0, 255));
         }
-        if(!start_node.unassigned){
+        if(start_node_placed){
             draw_list->AddCircleFilled(ImVec2(origin.x + start_node.pos.x, origin.y + start_node.pos.y), 4.0f, IM_COL32(0, 255, 0, 255));
         }
         for(const auto& poly : polys){
@@ -165,6 +167,14 @@ namespace App {
             for (const auto& v : poly.vertices)
                 pts.emplace_back(origin.x + v.pos.x, origin.y + v.pos.y);
             draw_list->AddConcavePolyFilled(pts.data(), pts.size(), IM_COL32(255, 255, 255, 255));
+        }
+        if (!path_points.empty()) {
+            for (int i = 0; i < path_points.size() - 1; i++) {
+                draw_list->AddLine(
+                    ImVec2(origin.x + path_points[i].pos.x, origin.y + path_points[i].pos.y),
+                    ImVec2(origin.x + path_points[i + 1].pos.x, origin.y + path_points[i + 1].pos.y),
+                        IM_COL32(0, 150, 255, 255), 4.0f);
+            }
         }
         if(created_shape){
             Polygon poly(points_to_draw);

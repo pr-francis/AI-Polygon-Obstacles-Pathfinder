@@ -41,7 +41,7 @@ bool Algorithms::checkNeighbor(int idx1, int idx2) { // check if two Vertices ar
 }
 
 std::vector<int> Algorithms::bfs(int start, int end) {
-	if (start == end || end>adjacencyList.size()) {return {};}
+	if (start == end) {return {};}
 
 	std::queue<int> frontier;
 	std::unordered_set<int> explored;
@@ -54,16 +54,17 @@ std::vector<int> Algorithms::bfs(int start, int end) {
 	while (!frontier.empty()) {
 		firstElement = frontier.front();
 		neighbours = adjacencyList[firstElement];
-		explored.insert(firstElement);
+		// explored.insert(firstElement); [[wrong place to insert]]
 		frontier.pop();
 		if (neighbours.size()!=0) {
 			for (int p : neighbours) {
 				if(explored.count(p)==0) { // check if this node is already explored
+					explored.insert(p);
 					parentMap[p] = firstElement;	// map each child in the parentMap to its parent
 					frontier.push(p);
 
 					if (p==end){ // building the path
-						for(int i = end; i > start; i = parentMap[i]){
+						for(int i = end; i != start; i = parentMap[i]){
 							path.push_back(i);
 						}
 

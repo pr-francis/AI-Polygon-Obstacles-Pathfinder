@@ -61,7 +61,7 @@ std::map<int, std::vector<int>> VisibilityGraph::build_graph(const std::vector<P
                 bool is_side = false;
                 for(std::pair<Vertex,Vertex> wall : walls){
                     if((wall.first.idx == nodeA.idx && wall.second.idx == nodeB.idx) ||
-                        wall.first.idx == nodeB.idx && wall.second.idx == nodeA.idx){
+                        (wall.first.idx == nodeB.idx && wall.second.idx == nodeA.idx)){
                             is_side = true;
                             break;
                         }
