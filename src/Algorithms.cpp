@@ -1,6 +1,7 @@
 #include "Algorithms.h"
 #include "VisibilityGraph.h"
 
+#include <limits>
 #include <vector>
 #include <map>
 #include <queue>
@@ -136,4 +137,61 @@ float Algorithms::fCost(int currentParent, int current, int end, std::map<int, f
 
 	float nodeHCost = euclideanDistance(current, end);
 	return nodeGCost + nodeHCost; // fCost = gCost + hCost
+}
+
+std::vector<int> Algorithms::dijkstra(int start, int end) {
+	parentMap.clear();
+
+	std::vector<int> path;
+	// inverting the behavior of the priority queue
+	std::priority_queue<std::pair<float, int>, std::vector<std::pair<float,int>>, std::greater<> > frontier;
+	// priority_queue<pair<g_cost,idx>> should sort now by least cost first
+
+	std::unordered_set<int> explored;
+
+	// will update both if we found a cheaper path to a node
+	std::map<int, float> gCost; // used to store the least cost for each node.
+	std::vector<int> neighbours; // used to store immediate neighbors for each node
+
+	frontier.emplace(0,start);
+	gCost[start] = 0;
+
+	int firstElement;
+
+	if (start==end){return {};}
+
+	while (!frontier.empty()) {
+		firstElement = frontier.top().second; // accessing the idx of the first element in the frontier
+		if (firstElement == end) {
+			for (int i=end; i != start; i=parentMap[i]) { // build the path
+				path.push_back(i);
+			}
+
+			path.push_back(start);
+			std::reverse(path.begin(), path.end());
+			return path;
+		}
+		neighbours = adjacencyList[firstElement];
+		frontier.pop();
+		if (explored.count(firstElement)!=0) {
+			continue;
+		}
+		explored.insert(firstElement);
+		if (!neighbours.empty()){
+			for (int p : neighbours) {
+				if (explored.count(p)!=0) {
+					continue;
+				}
+				// we can't just update the parents of a certain node without checking if it will lead to a less costly path
+				// now we need to check if this parent can achieve less gCost for the current node
+				float nodeGCost = gCost[firstElement] + euclideanDistance(p, firstElement);
+				if (!gCost.contains(p)) {gCost[p] = std::numeric_limits<float>::infinity();}
+				if (nodeGCost < gCost[p]) {
+					frontier.emplace(nodeGCost,p);
+					parentMap[p] = firstElement;
+				}
+			}
+		}
+	}
+	return {};
 }

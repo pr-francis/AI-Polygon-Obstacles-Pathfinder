@@ -25,6 +25,8 @@ public:
 	std::vector<int> AStar(int start, int end);
 	float fCost(int currentParent, int current, int end, std::map<int, float> &gCost); // fCost for AStar algo
 
+	std::vector<int> dijkstra(int start, int end);
+
 	Algorithms(std::map<int, std::vector<int>> adjacencyList, const std::vector<Vertex>& vertices) : adjacencyList(std::move(adjacencyList)), vertices(vertices) {};
 };
 
