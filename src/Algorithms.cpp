@@ -5,6 +5,8 @@
 #include <map>
 #include <queue>
 #include <unordered_set>
+#include <functional>
+#include <algorithm>
 
 // lookupTable = map<idx, <vector<pair<idx,cost>>>
 // std::map<int, std::vector<std::pair<int, float>>> lookupTable= { // 0 is the start index, 5 is the goal index
@@ -17,35 +19,20 @@
 // };
 
 float Algorithms::euclideanDistance(int idx1, int idx2) {
-    if (checkNeighbor(idx1,idx2)) {
-        ImVec2 pos1 = vertices[idx1].pos;
-        ImVec2 pos2 = vertices[idx2].pos;
+	ImVec2 pos1 = vertices[idx1].pos;
+    ImVec2 pos2 = vertices[idx2].pos;
 
-        // used std::hypot to calculate the euclidean dist
-        float dist = std::hypot(pos1.x - pos2.x, pos1.y - pos2.y);
-        return dist;
-    }
-    else {
-        return -1;
-    }
-}
-
-bool Algorithms::checkNeighbor(int idx1, int idx2) { // check if two Vertices are connected in the lookup table
-    const auto& idx1Neighbours = adjacencyList[idx1]; // this would return a vector from the lookupTable
-    for (int p : idx1Neighbours) { // iterate over the vector pairs to check if the 2 indices are neighbors
-        if (p==idx2) {
-            return true;
-        }
-    }
-    return false;
+    // used std::hypot to calculate the Euclidean dist
+    float dist = std::hypot(pos1.x - pos2.x, pos1.y - pos2.y);
+    return dist;
 }
 
 std::vector<int> Algorithms::bfs(int start, int end) {
+	parentMap.clear();
 	if (start == end) {return {};}
 
 	std::queue<int> frontier;
 	std::unordered_set<int> explored;
-	std::map<int, int> parentMap; // map<child, parent>
 	std::vector<int> neighbours;
 	std::vector<int> path;
 	int firstElement;
@@ -54,9 +41,8 @@ std::vector<int> Algorithms::bfs(int start, int end) {
 	while (!frontier.empty()) {
 		firstElement = frontier.front();
 		neighbours = adjacencyList[firstElement];
-		// explored.insert(firstElement); [[wrong place to insert]]
-		frontier.pop();
-		if (neighbours.size()!=0) {
+		frontier.pop(); // remove the first element (least cost)
+		if (!neighbours.empty()) {
 			for (int p : neighbours) {
 				if(explored.count(p)==0) { // check if this node is already explored
 					explored.insert(p);
@@ -77,4 +63,77 @@ std::vector<int> Algorithms::bfs(int start, int end) {
 		}
 	}
 	return {};
+}
+
+std::vector<int> Algorithms::AStar(int start, int end) {
+	parentMap.clear();
+
+	std::vector<int> path;
+	// inverting the behavior of the priority queue
+	std::priority_queue<std::pair<float, int>, std::vector<std::pair<float,int>>, std::greater<> > frontier;
+	// priority_queue<pair<f_cost,idx>> should sort now by least cost first
+
+	std::unordered_set<int> explored;
+
+	// will update both if we found a cheaper path to a node
+	std::map<int, float> gCost; // used to store the least cost for each node.
+	std::vector<int> neighbours; // used to store immediate neighbors for each node
+
+	frontier.emplace(0,start);
+	gCost[start] = 0;
+
+	int firstElement;
+
+	if (start==end){return {};}
+
+	while (!frontier.empty()) {
+		firstElement = frontier.top().second; // accessing the idx of the first element in the frontier
+		if (firstElement == end) {
+			for (int i=end; i != start; i=parentMap[i]) { // build the path
+				path.push_back(i);
+			}
+
+			path.push_back(start);
+			std::reverse(path.begin(), path.end());
+			return path;
+		}
+		neighbours = adjacencyList[firstElement];
+		frontier.pop();
+		if (explored.count(firstElement)!=0) {
+			continue;
+		}
+		explored.insert(firstElement);
+		if (!neighbours.empty()){
+			for (int p : neighbours) {
+				if (explored.count(p)!=0) {
+					continue;
+				}
+				// we can't just update the parents of a certain node without checking if it will lead to a less costly path
+				// now we need to check if this parent can achieve less gCost for the current node
+				float nodeFCost = fCost(firstElement,p,end,gCost);
+				frontier.emplace(nodeFCost,p);
+			}
+		}
+	}
+	return {};
+}
+
+float Algorithms::fCost(int currentParent, int current, int end, std::map<int, float> &gCost) {
+	float distPrev = euclideanDistance(current,currentParent);
+	float nodeGCost = gCost[currentParent] + distPrev;
+
+	if (gCost.count(current)==0) {  // check if the node G Cost exists in the gCost map
+		gCost[current] = nodeGCost;
+		parentMap[current] = currentParent;
+		// since the cost wasn't calculated before, then it's our first instance with this node, so we insert the current parent.
+	}
+
+	if (nodeGCost<gCost[current]) { // check if the currently calculated gCost is less than then one saved in the gCost map
+		gCost[current] = nodeGCost; // overwrite the old gCost with the new, lower one
+		parentMap[current] = currentParent; // update the old parent of the node with the one used here
+	}
+	// ========================PS: KEPT BOTH IF STATEMENTS SEPARATED FOR CLARITY========================
+
+	float nodeHCost = euclideanDistance(current, end);
+	return nodeGCost + nodeHCost; // fCost = gCost + hCost
 }
