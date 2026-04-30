@@ -185,7 +185,7 @@ std::vector<int> Algorithms::dijkstra(int start, int end) {
 				// we can't just update the parents of a certain node without checking if it will lead to a less costly path
 				// now we need to check if this parent can achieve less gCost for the current node
 				float nodeGCost = gCost[firstElement] + euclideanDistance(p, firstElement);
-				if (!gCost.contains(p)) {gCost[p] = std::numeric_limits<float>::infinity();}
+				if (gCost.find(p) == gCost.end()) {gCost[p] = std::numeric_limits<float>::infinity();}
 				if (nodeGCost < gCost[p]) {
 					frontier.emplace(nodeGCost,p);
 					parentMap[p] = firstElement;

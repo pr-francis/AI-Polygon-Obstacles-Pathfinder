@@ -53,8 +53,8 @@ namespace App {
         ImGui::Text("Algorithm:");
         static int algorithm = 0;
         ImGui::RadioButton("BFS", &algorithm, 0);
-        ImGui::RadioButton("Dijkstra", &algorithm, 1);
-        ImGui::RadioButton("A*", &algorithm, 2);
+        ImGui::RadioButton("A*", &algorithm, 1);
+        ImGui::RadioButton("Dijkstra", &algorithm, 2);
 
         if(ImGui::Button("Create Shape From Points") && points_to_draw.size() > 2) {
             created_shape = true;
@@ -70,6 +70,17 @@ namespace App {
             placing_goal_node = true;
             placing_start_node = false;
             //points_to_draw.clear();
+        }
+
+        if (ImGui::Button("Clear all")){
+            points_to_draw.clear();
+            points.clear();
+            path_points.clear();
+            polys.clear();
+            next_idx = 0;
+            next_polygon_idx = 0;
+            start_node_placed = false;
+            goal_node_placed = false;
         }
 
         if (ImGui::Button("Generate path")) {
@@ -90,9 +101,11 @@ namespace App {
                     break;
                 case 1:
                     //A*
+                     path = algorithms.AStar(start_node.idx, goal_node.idx);
                     break;
                 case 2:
                     //Dijkstra
+                    path = algorithms.dijkstra(start_node.idx, goal_node.idx);
                     break;
                 default:
                     break;
@@ -130,14 +143,14 @@ namespace App {
             next_idx++;
         }
 
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node){
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_start_node && ImGui::IsWindowHovered()){
             Vertex point(mouse_pos_in_canvas, 0.0f);
             start_node = point;
             start_node_placed = true;
             placing_start_node = false;
         }
 
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_goal_node){
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && placing_goal_node && ImGui::IsWindowHovered()){
             Vertex point(mouse_pos_in_canvas, 0.0f);
             goal_node = point;
             goal_node_placed = true;
