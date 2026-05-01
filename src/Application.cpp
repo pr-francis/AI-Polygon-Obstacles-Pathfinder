@@ -32,7 +32,13 @@ namespace App {
     bool goal_node_placed = false;
 
     void RenderUI(){
-        ImGui::Begin("UI");
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+        ImGui::Begin("UI", nullptr, window_flags);
         {
             ImGui::BeginChild("Grid", ImVec2(ImGui::GetContentRegionAvail().x * 0.75f, ImGui::GetContentRegionAvail().y));
             RenderGrid();
@@ -45,12 +51,11 @@ namespace App {
             ImGui::EndChild();
         }
 
-        //ImGui::ShowDemoWindow();
-
         ImGui::End();
     }
 
     void RenderSidebar() {
+        ImGui::BeginChild("Controls", ImVec2(0, ImGui::GetContentRegionAvail().y * 0.5f));
         ImGui::Text("Algorithm:");
         static int algorithm = 0;
         ImGui::RadioButton("BFS", &algorithm, 0);
@@ -116,6 +121,21 @@ namespace App {
             start_node_placed = false;
             goal_node_placed = false;
         }
+        ImGui::EndChild();
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 50, 60, 255));
+        ImGui::BeginChild("Instructions", ImVec2(0, 0), true);
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Instructions");
+        ImGui::Separator();
+        ImGui::TextWrapped(
+            "1. Place points on the grid by left clicking.\n"
+            "2. Click 'Create Shape' to finish a shape.\n"
+            "3. Select 'Place start node' and click the grid.\n"
+            "4. Select 'Place goal node' and click the grid.\n"
+            "5. Choose an algorithm and click 'Generate path'.\n"
+        );
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
     }
 
     void RenderGrid() {
