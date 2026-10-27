@@ -6,7 +6,7 @@ Simple C++ & ImGui program to find the shortest path from a start to an end goal
 The code is split into the following components:
 - UI code by [@DAPOTTIS](https://github.com/DAPOTTIS)
 - Visibility Graph by [@Mr-NOBY](https://github.com/Mr-NOBY)
-- Graph search algorithms by [@PierreRamez](https://github.com/PierreRamez)
+- Graph search algorithms by [@PierreRamez](https://github.com/pr-francis)
 
 # Build instructions
 to run, use the following commands:
